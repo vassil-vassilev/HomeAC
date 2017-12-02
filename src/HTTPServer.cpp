@@ -19,8 +19,8 @@ String _ip = "";
 
 const char *wifi_config_name = "IR Controller Configuration";
 int port = 80;
-char passcode[40] = "";
-char host_name[40] = "";
+char passcode[40] = "myhvacp@ssc0de";
+char host_name[40] = "blaster";
 char port_str[20] = "80";
 
 Ticker ticker1;
@@ -37,8 +37,6 @@ void setTicker (Ticker _ticker)
 
 void handleClient ()
 {
-    Serial.println("Memory: ");
-    Serial.println(ESP.getFreeHeap());
     server.handleClient();
     //Serial.println("Memory2: ");
     //Serial.println(ESP.getFreeHeap());

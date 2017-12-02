@@ -15,11 +15,15 @@ void setupAWS()
     int res = client.connect();
     Serial.printf("mqtt connect=%d\n", res);
 
-    if (res == 0)
+    if(res != 0) {
+            client.disconnect();
+    }
+
+    /* if (res == 0)
     {
         client.subscribe("/device/livingroom/dht", 1,
                          [](const char *topic, const char *msg) { Serial.printf("Got msg on topic %s - %s\n", msg, topic); });
-    }
+    } */
 }
 
 void sendAWSData(float t, float h, float hic)

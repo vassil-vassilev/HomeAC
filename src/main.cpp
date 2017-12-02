@@ -13,10 +13,10 @@
 //+=============================================================================
 // Sensor definitions
 //
-#define DHTPIN 5     // what digital pin the DHT22 is conected to
-#define DHTTYPE DHT22   // there are multiple kinds of DHT sensors
+// #define DHTPIN 5     // what digital pin the DHT22 is conected to
+// #define DHTTYPE DHT22   // there are multiple kinds of DHT sensors
 
-DHT dht(DHTPIN, DHTTYPE);
+// DHT dht(DHTPIN, DHTTYPE);
 
 int timeSinceLastRead = 0;
 
@@ -76,7 +76,7 @@ void setup() {
 
   if (getTime) timeClient.begin(); // Get the time
 
-  //setupWiFiServer(irsend);
+  setupWiFiServer(irsend);
 
   irsend.begin();
   //irrecv.enableIRIn();
@@ -111,42 +111,52 @@ void loop() {
   // Sensor Code
   //
   
-  if(timeSinceLastRead > 2000) {
-    // Reading temperature or humidity takes about 250 milliseconds!
-    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-    float h = dht.readHumidity();
-    // Read temperature as Celsius (the default)
-    float t = dht.readTemperature();
+  // if(timeSinceLastRead > 2000) {
+  //   // Reading temperature or humidity takes about 250 milliseconds!
+  //   // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  //   float h = dht.readHumidity();
+  //   // Read temperature as Celsius (the default)
+  //   float t = dht.readTemperature();
 
-    // Check if any reads failed and exit early (to try again).
-    if (isnan(h) || isnan(t)) {
-      Serial.println("Failed to read from DHT sensor!");
-      timeSinceLastRead = 0;
-      return;
-    }
+  //   // Check if any reads failed and exit early (to try again).
+  //   if (isnan(h) || isnan(t)) {
+  //     Serial.println("Failed to read from DHT sensor!");
+  //     timeSinceLastRead = 0;
+  //     return;
+  //   }
 
-    // Compute heat index in Celsius (isFahreheit = false)
-    float hic = dht.computeHeatIndex(t, h, false);
+  //   // Compute heat index in Celsius (isFahreheit = false)
+  //   float hic = dht.computeHeatIndex(t, h, false);
 
-    Serial.print("Humidity: ");
-    Serial.print(h);
-    Serial.print(" %\t");
-    Serial.print("Temperature: ");
-    Serial.print(t);
-    Serial.print(" *C\t");
-    Serial.print("Heat index: ");
-    Serial.print(hic);
-    Serial.println(" *C");
+  //   Serial.print("Humidity: ");
+  //   Serial.print(h);
+  //   Serial.print(" %\t");
+  //   Serial.print("Temperature: ");
+  //   Serial.print(t);
+  //   Serial.print(" *C\t");
+  //   Serial.print("Heat index: ");
+  //   Serial.print(hic);
+  //   Serial.println(" *C");
 
-    sendAWSData(t, h, hic);
+  //   sendAWSData(t, h, hic);
 
-    timeSinceLastRead = 0;
-  }
-  timeSinceLastRead += 100;
+  //   timeSinceLastRead = 0;
+  // }
+  // timeSinceLastRead += 100;
   
   //
   // End of Sensor Code
   //+=============================================================================
 
   delay(200);
+
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.println(WiFi.status());
+    WiFi.disconnect();
+    
+    if (!setupWifi(digitalRead(configpin) == LOW))
+      ESP.reset();
+
+    connectWiFI();
+  }
 }
