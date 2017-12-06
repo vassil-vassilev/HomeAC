@@ -32,11 +32,6 @@ unsigned long HexToLongInt(String h)
 
 void hvac_send(String data, int pulse, int pdelay, IRsend irsend)
 {
-    Serial.print("Sending HVAC data ");
-    Serial.println(data);
-    //holdReceive = true;
-    Serial.println("Blocking incoming IR signals");
-
     for (int i = 0; i < pulse; i++)
     {
         ir_hvac_command(data, irsend);
