@@ -17,6 +17,7 @@
 // Using ESP8266 WiFi
 //*******************************************************************************
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 
 namespace st
 {
@@ -27,8 +28,7 @@ namespace st
 		char st_ssid[50];
 		char st_password[50];
 		boolean st_preExistingConnection = false;
-		WiFiServer st_server; //server
-		WiFiClient st_client; //client
+		ESP8266WebServer st_server; //server
 
 	public:
 

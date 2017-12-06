@@ -143,37 +143,3 @@ void irblast(String type, String dataStr, unsigned int len, int rdelay, int puls
 
     //resetReceive();
 }
-
-void rawblast(JsonArray &raw, int khz, int rdelay, int pulse, int pdelay, int repeat, IRsend irsend)
-{
-    Serial.println("Raw transmit");
-    //holdReceive = true;
-    Serial.println("Blocking incoming IR signals");
-    // Repeat Loop
-    for (int r = 0; r < repeat; r++)
-    {
-        // Pulse Loop
-        for (int p = 0; p < pulse; p++)
-        {
-            Serial.println("Sending code");
-            irsend.enableIROut(khz);
-            for (unsigned int i = 0; i < raw.size(); i++)
-            {
-                int val = raw[i];
-                if (i & 1)
-                    irsend.space(max(0, val));
-                else
-                    irsend.mark(val);
-            }
-            irsend.space(0);
-            if (p + 1 < pdelay)
-                delay(pdelay);
-        }
-        if (r + 1 < rdelay)
-            delay(rdelay);
-    }
-
-    Serial.println("Transmission complete");
-
-    //resetReceive();
-}

@@ -14,7 +14,7 @@
 #include <PollingSensor.h>   //Generic Polling "Sensor" Class, polls Arduino pins periodically
 #include <Everything.h>      //Master Brain of ST_Anything library that ties everything together and performs ST Shield communications
 #include <SmartThingsESP8266WiFi.h>
-#include <PS_TemperatureHumidity.h>
+#include <MyTemperatureHumidity.h>
 
 const int configpin = 10;                                     // GPIO10
 const int ledpin = BUILTIN_LED;                               // Built in LED defined for WEMOS people
@@ -55,7 +55,7 @@ void callback(const String &msg)
 }
 
 void stSetup() {
-  static st::PS_TemperatureHumidity sensor1(F("temphumid1"), 30, 3, 5, "temperature1", "humidity1", true);
+  static st::MyTemperatureHumidity sensor1(F("temphumid1"), 30, 3, 5, irsend, "temperature1", "humidity1", true);
 
   st::Everything::debug=true;
   st::Executor::debug=true;
@@ -113,9 +113,7 @@ void setup() {
   //setupAWS();
 }
 
-void loop() {
-  handleClient();
-  
+void loop() {  
   if (getTime) timeClient.update();                               // Update the time
 
   digitalWrite(ledpin, LOW);                                    // Turn on the LED for 0.5 seconds

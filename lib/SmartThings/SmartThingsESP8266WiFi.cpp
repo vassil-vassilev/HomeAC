@@ -43,8 +43,6 @@ namespace st
 
 		Serial.println();
 
-		st_server.begin();
-
 		Serial.println(F(""));
 		Serial.println(F("Enter the following three lines of data into ST App on your phone!"));
 		Serial.print(F("localIP = "));
@@ -66,6 +64,29 @@ namespace st
 		Serial.println(F("Disabling ESP8266 WiFi Access Point"));
 		Serial.println(F(""));
 		WiFi.mode(WIFI_STA);
+
+		st_server.on("/", [&]() {
+			if (_isDebugEnabled)
+			{
+				Serial.println(F("**** Received connection ***"));
+				Serial.println(st_server.arg("plain"));
+			}
+
+			String message;
+
+			if(st_server.hasArg("device")) {
+				message = st_server.arg("device") + " " + st_server.arg("plain");
+			}
+			else if(st_server.hasArg("refresh")) {
+				message = "refresh";
+			}
+
+			_calloutFunction(message);
+
+			st_server.send(200, "text/html", "Success");
+		});
+
+		st_server.begin();
 	}
 
 	//*****************************************************************************
@@ -73,9 +94,6 @@ namespace st
 	//*****************************************************************************
 	void SmartThingsESP8266WiFi::run(void)
 	{
-		String readString;
-		String tempString;
-
 		if (WiFi.isConnected() == false)
 		{
 			if (_isDebugEnabled)
@@ -88,77 +106,7 @@ namespace st
 			//init();
 		}
 
-		WiFiClient client = st_server.available();
-		if (client) {
-			boolean currentLineIsBlank = true;
-			while (client.connected()) {
-				if (client.available()) {
-					char c = client.read();
-					//read char by char HTTP request
-					if (readString.length() < 200) {
-						//store characters to string
-						readString += c;
-					}
-					else
-					{
-						if (_isDebugEnabled)
-						{
-							Serial.println(F(""));
-							Serial.println(F("SmartThings.run() - Exceeded 200 character limit"));
-							Serial.println(F(""));
-						}
-					}
-					// if you've gotten to the end of the line (received a newline
-					// character) and the line is blank, the http request has ended,
-					// so you can send a reply
-					if (c == '\n' && currentLineIsBlank) {
-						//now output HTML data header
-						tempString = readString.substring(readString.indexOf('/') + 1, readString.indexOf('?'));
-
-						if (tempString.length() > 0) {
-							client.println(F("HTTP/1.1 200 OK")); //send new page
-							client.println();
-						}
-						else {
-							client.println(F("HTTP/1.1 204 No Content"));
-							client.println();
-							client.println();
-							if (_isDebugEnabled)
-							{
-								Serial.println(F("No Valid Data Received"));
-							}
-						}
-						break;
-					}
-					if (c == '\n') {
-						// you're starting a new line
-						currentLineIsBlank = true;
-					}
-					else if (c != '\r') {
-						// you've gotten a character on the current line
-						currentLineIsBlank = false;
-					}
-				}
-			}
-
-			delay(1);
-			//stopping client
-			client.stop();
-
-			//Handle the received data after cleaning up the network connection
-			if (tempString.length() > 0) {
-				if (_isDebugEnabled)
-				{
-					Serial.print(F("Handling request from ST. tempString = "));
-					Serial.println(tempString);
-				}
-				//Pass the message to user's SmartThings callout function
-				_calloutFunction(tempString);
-			}
-
-			readString = "";
-			tempString = "";
-		}
+		st_server.handleClient();
 	}
 
 	//*******************************************************************************
@@ -179,20 +127,20 @@ namespace st
 		}
 
 		//Make sure the client is stopped, to free up socket for new conenction
-		st_client.stop();
+		st_server.client().stop();
 
-		if (st_client.connect(st_hubIP, st_hubPort))
+		if (st_server.client().connect(st_hubIP, st_hubPort))
 		{
-			st_client.println(F("POST / HTTP/1.1"));
-			st_client.print(F("HOST: "));
-			st_client.print(st_hubIP);
-			st_client.print(F(":"));
-			st_client.println(st_hubPort);
-			st_client.println(F("CONTENT-TYPE: text"));
-			st_client.print(F("CONTENT-LENGTH: "));
-			st_client.println(message.length());
-			st_client.println();
-			st_client.println(message);
+			st_server.client().println(F("POST / HTTP/1.1"));
+			st_server.client().print(F("HOST: "));
+			st_server.client().print(st_hubIP);
+			st_server.client().print(F(":"));
+			st_server.client().println(st_hubPort);
+			st_server.client().println(F("CONTENT-TYPE: text"));
+			st_server.client().print(F("CONTENT-LENGTH: "));
+			st_server.client().println(message.length());
+			st_server.client().println();
+			st_server.client().println(message);
 		}
 		else
 		{
@@ -223,35 +171,35 @@ namespace st
 			}
 
 
-			st_client.flush();
-			st_client.stop();
-			if (st_client.connect(st_hubIP, st_hubPort))
+			st_server.client().flush();
+			st_server.client().stop();
+			if (st_server.client().connect(st_hubIP, st_hubPort))
 			{
-				st_client.println(F("POST / HTTP/1.1"));
-				st_client.print(F("HOST: "));
-				st_client.print(st_hubIP);
-				st_client.print(F(":"));
-				st_client.println(st_hubPort);
-				st_client.println(F("CONTENT-TYPE: text"));
-				st_client.print(F("CONTENT-LENGTH: "));
-				st_client.println(message.length());
-				st_client.println();
-				st_client.println(message);
+				st_server.client().println(F("POST / HTTP/1.1"));
+				st_server.client().print(F("HOST: "));
+				st_server.client().print(st_hubIP);
+				st_server.client().print(F(":"));
+				st_server.client().println(st_hubPort);
+				st_server.client().println(F("CONTENT-TYPE: text"));
+				st_server.client().print(F("CONTENT-LENGTH: "));
+				st_server.client().println(message.length());
+				st_server.client().println();
+				st_server.client().println(message);
 			}
 
 		}
 
 		//if (_isDebugEnabled) { Serial.println(F("WiFi.send(): Reading for reply data "));}
 		// read any data returned from the POST
-		while (st_client.connected()) {
+		while (st_server.client().connected()) {
 			//while (st_client.available()) {
-			char c = st_client.read(); //gets byte from ethernet buffer
+			char c = st_server.client().read(); //gets byte from ethernet buffer
 									   //if (_isDebugEnabled) { Serial.print(c); } //prints byte to serial monitor
 									   //}
 		}
 
 		delay(1);
-		st_client.stop();
+		st_server.client().stop();
 	}
 
 }
